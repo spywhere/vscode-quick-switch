@@ -16,5 +16,7 @@ You can also use the following commands...
 - `Quick Switch: Switch Project...`: Switch to selected project (shortcut item default behaviour)
 - `Quick Switch: Add Current Project`: Add current project to a list
 - `Quick Switch: List All Projects...`: Remove a selected project
+- `Quick Switch: Reorder Projects...`: Reorder projects
+- `Quick Switch: Reload Configurations`: Reload a list of projects
 
 Project list will store in a `.quick-switch` file in your home directory.

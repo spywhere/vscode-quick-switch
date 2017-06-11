@@ -20,6 +20,11 @@ class QuickSwitchController {
 
         let subscriptions: vscode.Disposable[] = [];
         subscriptions.push(vscode.commands.registerCommand(
+            "quick-switch.reload", () => {
+                this.quickSwitch.loadConfigurations();
+            }
+        ));
+        subscriptions.push(vscode.commands.registerCommand(
             "quick-switch.addProject", () => {
                 this.quickSwitch.addProject();
             }
@@ -32,6 +37,13 @@ class QuickSwitchController {
         subscriptions.push(vscode.commands.registerCommand(
             "quick-switch.listProject", () => {
                 this.quickSwitch.listProject();
+            }
+        ));
+        subscriptions.push(vscode.commands.registerCommand(
+            "quick-switch.reorderProject", () => {
+                this.quickSwitch.listProject({
+                    reorder: true
+                });
             }
         ));
         vscode.workspace.onDidChangeConfiguration(() => {
@@ -62,6 +74,7 @@ interface ProjectItem extends vscode.QuickPickItem {
 }
 
 class QuickSwitch {
+    private timer: NodeJS.Timer;
     private projects: string[] = [];
     private statusItem: vscode.StatusBarItem;
 
@@ -77,6 +90,7 @@ class QuickSwitch {
     }
 
     dispose(){
+        clearInterval(this.timer);
         this.statusItem.dispose();
     }
 
@@ -93,6 +107,7 @@ class QuickSwitch {
     }
 
     loadConfigurations(){
+        this.timer = setInterval(this.loadConfigurations, 60000);
         let configPath = this.getConfigPath();
 
         if (!fs.existsSync(configPath)) {
@@ -231,7 +246,10 @@ class QuickSwitch {
         });
     }
 
-    listProject(){
+    listProject(options?: {
+        reorder?: boolean
+    }){
+        let reorder = options && options.reorder;
         if (this.projects.length === 0) {
             this.showInformation("Quick Switch: No project available.", {
                 title: "Add Current Project",
@@ -241,12 +259,24 @@ class QuickSwitch {
             });
             return;
         }
-        this.pickProject("Select a project to remove...", (project) => {
-            this.projects.splice(project.index, 1);
-            this.saveConfigurations();
-            if (this.projects.length > 0) {
-                this.listProject();
+        this.pickProject(
+            (
+                reorder ?
+                "Select a project to move up" :
+                "Select a project to remove..."
+            ),
+            (project) => {
+                let selected = this.projects.splice(project.index, 1);
+                if (reorder) {
+                    this.projects.splice(
+                        Math.max(0, project.index - 1), 0, ...selected
+                    );
+                }
+                this.saveConfigurations();
+                if (this.projects.length > 0) {
+                    this.listProject(options);
+                }
             }
-        });
+        );
     }
 }
