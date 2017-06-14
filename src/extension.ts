@@ -93,6 +93,9 @@ class QuickSwitch {
         this.statusItem.text = "$(repo-pull)";
         this.statusItem.tooltip = "Switch Project...";
         this.statusItem.hide();
+        this.timer = setInterval(() => {
+            this.loadConfigurations();
+        }, 60000);
         this.loadConfigurations();
     }
 
@@ -121,9 +124,6 @@ class QuickSwitch {
     }
 
     loadConfigurations(){
-        this.timer = setInterval(() => {
-            this.loadConfigurations();
-        }, 60000);
         let configPath = this.getConfigPath();
 
         if (!fs.existsSync(configPath)) {
