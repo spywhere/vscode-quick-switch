@@ -46,6 +46,11 @@ class QuickSwitchController {
                 });
             }
         ));
+        subscriptions.push(vscode.commands.registerCommand(
+            "quick-switch.cycleStatusStyle", () => {
+                this.quickSwitch.cycleStatusStyle();
+            }
+        ));
         vscode.workspace.onDidChangeConfiguration(() => {
             this.quickSwitch.loadConfigurations();
         }, this, subscriptions);
@@ -61,6 +66,7 @@ class QuickSwitchController {
 interface ConfigurationStructure {
     schema: number;
     projects: string[];
+    minimalStatus: boolean;
 }
 
 interface ActionItem extends vscode.MessageItem {
@@ -77,6 +83,7 @@ class QuickSwitch {
     private timer: NodeJS.Timer;
     private projects: string[] = [];
     private statusItem: vscode.StatusBarItem;
+    private minimalStatus = true;
 
     constructor(){
         this.statusItem = vscode.window.createStatusBarItem(
@@ -95,23 +102,33 @@ class QuickSwitch {
     }
 
     updateStatus(error?: Error){
+        let rootPath = vscode.workspace.rootPath;
         if (error) {
             this.statusItem.command = "quick-switch.reload";
-            this.statusItem.text = "$(stop)";
+            this.statusItem.text = `$(stop)${
+                (this.minimalStatus || !rootPath) ?
+                "" : " " + path.basename(rootPath)
+            }`;
             this.statusItem.tooltip = "Loading Error. Click to retry.";
         } else {
             this.statusItem.command = "quick-switch.switchProject";
-            this.statusItem.text = "$(repo-pull)";
+            this.statusItem.text = `$(repo-pull)${
+                (this.minimalStatus || !rootPath) ?
+                "" : " " + path.basename(rootPath)
+            }`;
             this.statusItem.tooltip = "Switch Project...";
         }
     }
 
     loadConfigurations(){
-        this.timer = setInterval(this.loadConfigurations, 60000);
+        this.timer = setInterval(() => {
+            this.loadConfigurations();
+        }, 60000);
         let configPath = this.getConfigPath();
 
         if (!fs.existsSync(configPath)) {
             this.projects = [];
+            this.minimalStatus = true;
             this.updateStatus();
             this.statusItem.show();
             return;
@@ -135,10 +152,15 @@ class QuickSwitch {
                 let data: ConfigurationStructure = JSON.parse(content);
                 if (data.schema === 1) {
                     this.projects = data.projects;
+                    this.minimalStatus = true;
+                } else if (data.schema === 2) {
+                    this.projects = data.projects;
+                    this.minimalStatus = data.minimalStatus;
                 }
             } catch (error) {
                 console.error("Error while parsing configuration:", error);
                 this.projects = [];
+                this.minimalStatus = true;
             }
             this.updateStatus();
             this.statusItem.show();
@@ -147,8 +169,9 @@ class QuickSwitch {
 
     saveConfigurations(){
         fs.writeFile(this.getConfigPath(), JSON.stringify({
-            schema: 1,
-            projects: this.projects
+            schema: 2,
+            projects: this.projects,
+            minimalStatus: this.minimalStatus
         }, undefined, 2), (error) => {
             if (!error) {
                 return;
@@ -278,5 +301,11 @@ class QuickSwitch {
                 }
             }
         );
+    }
+
+    cycleStatusStyle(){
+        this.minimalStatus = !this.minimalStatus;
+        this.updateStatus();
+        this.saveConfigurations();
     }
 }

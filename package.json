@@ -2,7 +2,7 @@
     "name": "quick-switch",
     "displayName": "Quick Switch",
     "description": "An extension for fast project switching",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "publisher": "spywhere",
     "engines": {
         "vscode": "^1.12.0"
@@ -31,6 +31,9 @@
             }, {
                 "command": "quick-switch.reload",
                 "title": "Quick Switch: Reload Configurations"
+            }, {
+                "command": "quick-switch.cycleStatusStyle",
+                "title": "Quick Switch: Cycle Status Style"
             }
         ]
     },
