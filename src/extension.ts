@@ -55,6 +55,13 @@ class QuickSwitchController {
             }
         ));
         subscriptions.push(vscode.commands.registerCommand(
+            "quick-switch.renameWorkspace", () => {
+                this.quickSwitch.addWorkspace({
+                    rename: true
+                });
+            }
+        ));
+        subscriptions.push(vscode.commands.registerCommand(
             "quick-switch.reorderProject", () => {
                 this.quickSwitch.listProject({
                     reorder: true
@@ -398,32 +405,44 @@ class QuickSwitch {
         });
     }
 
-    addWorkspace(forceValue?: string){
+    addWorkspace(options?: {
+        rename?: boolean;
+        forceValue?: string;
+    }){
         let action = (value) => {
             if (
-                !forceValue &&
+                (!options || !options.forceValue) &&
                 (this.workspace || {})[value]
             ) {
                 this.showWarning("Quick Switch: Workspace already exists.", {
                     title: "Replace workspace",
                     action: () => {
-                        this.addWorkspace(value);
+                        options.forceValue = value;
+                        this.addWorkspace(options);
                     }
                 });
                 return;
             }
+            let lastWorkspaceName = this.currentWorkspace || "default";
             this.currentWorkspace = value;
             if (!this.workspace) {
                 this.workspace = {};
             }
-            this.workspace[value] = [];
+            if (options && options.rename) {
+                this.workspace[value] = this.workspace[lastWorkspaceName];
+                delete this.workspace[lastWorkspaceName];
+            } else {
+                this.workspace[value] = [];
+            }
             this.saveConfigurations();
-            this.showInformation("Quick Switch: Workspace added.", {
+            this.showInformation(`Quick Switch: Workspace ${
+                (options && options.rename) ? "renamed" : "added"
+            }.`, {
                 title: "Show Workspaces",
                 action: () => {
                     this.switchWorkspace();
                 }
-            }, {
+            }, (options && options.rename) ? undefined : {
                 title: "Add Current Project",
                 action: () => {
                     this.addProject();
@@ -431,19 +450,25 @@ class QuickSwitch {
             });
         };
 
-        if (forceValue) {
-            return action(forceValue);
+        if (options && options.forceValue) {
+            return action(options.forceValue);
         }
 
-        this.askValue("Enter workspace name...", action, undefined, (value) => {
-            if (new RegExp("^[a-z0-9-]+$").test(value)) {
-                return "";
+        this.askValue(
+            (options && options.rename) ? `Rename "${
+                this.currentWorkspace || "default"
+            }" workspace` : "Enter workspace name...",
+            action, undefined,
+            (value) => {
+                if (new RegExp("^[a-z0-9-]+$").test(value)) {
+                    return "";
+                }
+                return (
+                    "Workspace name must be lowercase, " +
+                    "alphabet or numeric or - only."
+                );
             }
-            return (
-                "Workspace name must be lowercase, " +
-                "alphabet or numeric or - only."
-            );
-        });
+        );
     }
 
     addProject(force: boolean = false){

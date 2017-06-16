@@ -2,7 +2,7 @@
     "name": "quick-switch",
     "displayName": "Quick Switch",
     "description": "An extension for fast project switching",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "publisher": "spywhere",
     "engines": {
         "vscode": "^1.12.0"
@@ -34,6 +34,9 @@
             }, {
                 "command": "quick-switch.listProject",
                 "title": "Quick Switch: List All Projects..."
+            }, {
+                "command": "quick-switch.renameWorkspace",
+                "title": "Quick Switch: Rename current workspace..."
             }, {
                 "command": "quick-switch.reorderProject",
                 "title": "Quick Switch: Reorder Projects..."
