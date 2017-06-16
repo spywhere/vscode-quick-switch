@@ -258,6 +258,9 @@ class QuickSwitch {
                     );
                 } else if (data.schema === 3) {
                     let schema = data as ConfigurationStructureV3;
+                    if (schema.use !== undefined) {
+                        this.currentWorkspace = schema.use;
+                    }
                     if (schema.workspaces !== undefined) {
                         this.workspace = schema.workspaces;
                     }

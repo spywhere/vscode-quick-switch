@@ -2,7 +2,7 @@
     "name": "quick-switch",
     "displayName": "Quick Switch",
     "description": "An extension for fast project switching",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "publisher": "spywhere",
     "engines": {
         "vscode": "^1.12.0"
