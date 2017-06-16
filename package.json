@@ -2,7 +2,7 @@
     "name": "quick-switch",
     "displayName": "Quick Switch",
     "description": "An extension for fast project switching",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "publisher": "spywhere",
     "engines": {
         "vscode": "^1.12.0"
@@ -17,11 +17,20 @@
     "contributes": {
         "commands": [
             {
+                "command": "quick-switch.switchWorkspace",
+                "title": "Quick Switch: Switch Workspace..."
+            }, {
                 "command": "quick-switch.switchProject",
                 "title": "Quick Switch: Switch Project..."
             }, {
+                "command": "quick-switch.addWorkspace",
+                "title": "Quick Switch: Add New Workspace"
+            }, {
                 "command": "quick-switch.addProject",
                 "title": "Quick Switch: Add Current Project"
+            }, {
+                "command": "quick-switch.listWorkspace",
+                "title": "Quick Switch: List All Workspaces..."
             }, {
                 "command": "quick-switch.listProject",
                 "title": "Quick Switch: List All Projects..."
@@ -32,8 +41,8 @@
                 "command": "quick-switch.reload",
                 "title": "Quick Switch: Reload Configurations"
             }, {
-                "command": "quick-switch.cycleStatusStyle",
-                "title": "Quick Switch: Cycle Status Style"
+                "command": "quick-switch.setStatusFormat",
+                "title": "Quick Switch: Set Status Format"
             }
         ]
     },
