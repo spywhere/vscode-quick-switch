@@ -512,6 +512,7 @@ class QuickSwitch {
     switchWorkspace(){
         this.pickWorkspace("Select a workspace to switch to...", (workspace) => {
             this.currentWorkspace = workspace.name;
+            this.updateStatus();
             this.saveConfigurations();
         }, {
             label: "Create New Workspace...",
