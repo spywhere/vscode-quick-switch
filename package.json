@@ -2,7 +2,7 @@
     "name": "quick-switch",
     "displayName": "Quick Switch",
     "description": "An extension for fast project switching",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "publisher": "spywhere",
     "engines": {
         "vscode": "^1.12.0"
@@ -19,33 +19,46 @@
             {
                 "command": "quick-switch.switchWorkspace",
                 "title": "Quick Switch: Switch Workspace..."
-            }, {
+            },
+            {
                 "command": "quick-switch.switchProject",
                 "title": "Quick Switch: Switch Project..."
-            }, {
+            },
+            {
                 "command": "quick-switch.addWorkspace",
                 "title": "Quick Switch: Add New Workspace"
-            }, {
+            },
+            {
                 "command": "quick-switch.addProject",
                 "title": "Quick Switch: Add Current Project"
-            }, {
+            },
+            {
                 "command": "quick-switch.listWorkspace",
                 "title": "Quick Switch: List All Workspaces..."
-            }, {
+            },
+            {
                 "command": "quick-switch.listProject",
                 "title": "Quick Switch: List All Projects..."
-            }, {
+            },
+            {
                 "command": "quick-switch.renameWorkspace",
                 "title": "Quick Switch: Rename current workspace..."
-            }, {
+            },
+            {
                 "command": "quick-switch.reorderProject",
                 "title": "Quick Switch: Reorder Projects..."
-            }, {
+            },
+            {
                 "command": "quick-switch.reload",
                 "title": "Quick Switch: Reload Configurations"
-            }, {
+            },
+            {
                 "command": "quick-switch.setStatusFormat",
                 "title": "Quick Switch: Set Status Format"
+            },
+            {
+                "command": "quick-switch.setAutoSwitch",
+                "title": "Quick Switch: Set Auto Switch..."
             }
         ]
     },

@@ -4,6 +4,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 
+const DAYS = [
+    "Sunday", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday"
+];
+
 export function activate(context: vscode.ExtensionContext) {
     let quickSwitch = new QuickSwitch();
     context.subscriptions.push(quickSwitch);
@@ -21,7 +26,7 @@ class QuickSwitchController {
         let subscriptions: vscode.Disposable[] = [];
         subscriptions.push(vscode.commands.registerCommand(
             "quick-switch.reload", () => {
-                this.quickSwitch.loadConfigurations();
+                this.quickSwitch.loadConfigurations(true);
             }
         ));
         subscriptions.push(vscode.commands.registerCommand(
@@ -73,8 +78,13 @@ class QuickSwitchController {
                 this.quickSwitch.setStatusFormat();
             }
         ));
+        subscriptions.push(vscode.commands.registerCommand(
+            "quick-switch.setAutoSwitch", () => {
+                this.quickSwitch.setAutoSwitch();
+            }
+        ));
         vscode.workspace.onDidChangeConfiguration(() => {
-            this.quickSwitch.loadConfigurations();
+            this.quickSwitch.loadConfigurations(false);
         }, this, subscriptions);
 
         this.disposable = vscode.Disposable.from(...subscriptions);
@@ -87,6 +97,10 @@ class QuickSwitchController {
 
 interface Workspace {
     [project: string]: string[];
+}
+
+interface AutoSwitch {
+    [day: string]: string;
 }
 
 interface ConfigurationStructure {
@@ -102,6 +116,7 @@ interface ConfigurationStructureV3 extends ConfigurationStructure {
     use: string;
     workspaces: Workspace;
     statusText: string;
+    autoSwitch?: AutoSwitch;
 }
 
 interface ActionItem extends vscode.MessageItem {
@@ -119,6 +134,13 @@ interface ProjectItem extends vscode.QuickPickItem {
     action?: () => void;
 }
 
+interface DayItem extends vscode.QuickPickItem {
+    name: string;
+    // index: number;
+    // path: string;
+    // action?: () => void;
+}
+
 class QuickSwitch {
     private timer: NodeJS.Timer;
     private currentWorkspace?: string = "default";
@@ -132,6 +154,7 @@ class QuickSwitch {
         "Workspace: <workspace>\n" +
         "Click to switch project..."
     );
+    private autoSwitch: AutoSwitch = {};
 
     constructor(){
         this.statusItem = vscode.window.createStatusBarItem(
@@ -142,9 +165,9 @@ class QuickSwitch {
         this.statusItem.tooltip = "Switch Project...";
         this.statusItem.hide();
         this.timer = setInterval(() => {
-            this.loadConfigurations();
+            this.loadConfigurations(false);
         }, 60000);
-        this.loadConfigurations();
+        this.loadConfigurations(true);
     }
 
     dispose(){
@@ -210,7 +233,7 @@ class QuickSwitch {
         }
     }
 
-    loadConfigurations(){
+    loadConfigurations(useAutoSwitch: boolean){
         let configPath = this.getConfigPath();
 
         if (!fs.existsSync(configPath)) {
@@ -267,7 +290,16 @@ class QuickSwitch {
                     if (schema.statusText !== undefined) {
                         this.statusText = schema.statusText;
                     }
+                    if (schema.autoSwitch !== undefined) {
+                        this.autoSwitch = schema.autoSwitch;
+                    }
                 }
+
+                let today = DAYS[new Date().getDay()].toLowerCase();
+                if (this.autoSwitch[today]) {
+                    this.currentWorkspace = this.autoSwitch[today];
+                }
+
                 this.updateStatus();
             } catch (error) {
                 console.error("Error while parsing configuration:", error);
@@ -282,7 +314,8 @@ class QuickSwitch {
             schema: 3,
             use: this.currentWorkspace,
             workspaces: this.workspace,
-            statusText: this.statusText
+            statusText: this.statusText,
+            autoSwitch: this.autoSwitch
         }, undefined, 2), (error) => {
             if (!error) {
                 return;
@@ -298,6 +331,49 @@ class QuickSwitch {
             ] || "",
             ".quick-switch"
         );
+    }
+
+    setAutoSwitch(){
+        let days: DayItem[] = [{
+            name: "*",
+            label: "Clear all days",
+            description: ""
+        }].concat(DAYS.map((dayName) => ({
+            name: dayName.toLowerCase(),
+            label: dayName,
+            description: this.autoSwitch[dayName.toLowerCase()] || "<None>"
+        })));
+
+        vscode.window.showQuickPick(days, {
+            ignoreFocusOut: true
+        }).then((item) => {
+            if (!item) {
+                this.saveConfigurations();
+                return;
+            }
+
+            if (item.name === "*") {
+                this.autoSwitch = {};
+                this.setAutoSwitch();
+                return;
+            }
+
+            this.pickWorkspace(
+                `Pick a workspace for ${ item.label }...`,
+                (workspace) => {
+                    if (workspace.name) {
+                        this.autoSwitch[item.name] = workspace.name;
+                    } else {
+                        delete this.autoSwitch[item.name];
+                    }
+                    this.setAutoSwitch();
+                }, {
+                    name: "",
+                    label: "No workspace",
+                    description: ""
+                }
+            );
+        });
     }
 
     askValue(
